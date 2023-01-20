@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="memberMapper">
+
+	<!--   <resultMap type="edu.kh.project.member.model.vo.Member" id="member"></resultMap> -->
+  	<resultMap type="Member" id="member_rm">
+  
+        <!-- DB에서 PK에 해당하는 필드, 컬럼을 작성하는 태그 -->
+     <id property = "memberNo" column="MEMBER_NO"/>
+     
+     <!-- 나머지 일반 컬럼 -->
+      <result property="memberEmail" column="MEMBER_EMAIL" />
+      <result property="memberPw" column="MEMBER_PW" />
+      <result property="memberName" column="MEMBER_NAME" />
+      <result property="memberNickname" column="MEMBER_NICKNAME" />
+      <result property="memberProfileImg" column="MEMBER_PROFILE_IMG" />
+      <result property="enrollDate" column="ENROLL_DATE" />
+      <result property="memberOpenFl" column="MEMBER_OPEN_FL" />
+      <result property="secessionFl" column="SECESSION_FL" />
+      <result property="authority" column="AUTHORITY" />
+      
+  	</resultMap>
+  
+  <!-- 로그인 -->
+  <select id = "login" parameterType="string" resultMap="member_rm">
+			SELECT *
+			FROM "MEMBER"
+			WHERE MEMBER_EMAIL = #{memberEmail}
+			AND SECESSION_FL ='N'
+  </select>
+  
+  
+  <!-- 회원가입 -->
+  <insert id="signUp" parameterType="Member" useGeneratedKeys="true">
+   	<selectKey keyProperty="memberNo" resultType="_int" order="BEFORE" >
+  		SELECT SEQ_MEMBER_NO.NEXTVAL FROM DUAL
+  	</selectKey>
+	  	INSERT INTO "MEMBER"
+			VALUES(#{memberNo}, #{memberEmail}, #{memberPw}, #{memberName}, #{memberNickname}, NULL, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
+  </insert>
+  
+  
+  <!-- 회원가입 후 좋아요, 조회수 공개 여부에 회원번호 삽입 -->
+  <insert id="insertUserPubPriFl">
+  	INSERT INTO "SETTING"
+  	VALUES(#{memberNo}, DEFAULT)
+  </insert>
+  
+  
+  
+  <!-- 회원가입_이메일 중복 체크 -->
+  <select id="emailDupCheck" parameterType="string" resultType="_int">
+  		SELECT COUNT(*)
+  		FROM "MEMBER"	
+  		WHERE MEMBER_EMAIL = #{memberEmail}
+  		AND SECESSION_FL ='N'
+  </select>
+  
+  
+  <!-- 회원가입_닉네임 중복 체크 -->
+  <select id="nicknameDupCheck" parameterType="string" resultType="_int">
+  		SELECT COUNT(*)
+  		FROM "MEMBER"	
+  		WHERE MEMBER_NICKNAME = #{memberNickname}
+  		AND SECESSION_FL ='N'
+  </select>
+  
+  <!-- 계정찾기_비밀번호 재설정 -->
+  <update id="updatePw">
+  	UPDATE MEMBER
+  	SET MEMBER_PW = #{memberPw}
+  	WHERE MEMBER_EMAIL = #{memberEmail}
+  	AND SECESSION_FL ='N'
+  </update>
+  
+  
+  <!-- 자기자신 팔로우 위한 회원번호 조회 -->
+  <select id="selectMemberNo" resultType="_int">
+  
+  	SELECT MEMBER_NO
+  	FROM MEMBER
+  	WHERE MEMBER_EMAIL = #{memberEmail}
+  	AND SECESSION_FL ='N'
+  </select>
+  
+  
+  <!-- 가입 시 자기 자신 팔로우 -->
+  <insert id="followMyself">
+  	INSERT INTO FOLLOW
+  	VALUES(#{memberNo}, #{memberNo}, 'M', 'Y')
+  </insert>
+  
+  
+
+  
+  
+</mapper>
